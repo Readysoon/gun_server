@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>GUN Sync Test</title>
+  <script src="gun.js"></script>
+</head>
+<body>
+  <h1>GUN Sync Test</h1>
+  <button onclick="sendData()">Daten senden</button>
+  <div id="output"></div>
+  
+  <h2>🗄️ Alle Daten in der Datenbank:</h2>
+  <div id="allData" style="background: #f0f0f0; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap;"></div>
+
+  <script>
+    const gun = Gun(['http://localhost:8765/gun']);
+
+    // Daten speichern
+    function sendData() {
+      const msg = 'Hallo von diesem PC - ' + new Date().toLocaleTimeString();
+      gun.get('shared/data').put({ message: msg });
+    }
+
+    // Daten empfangen
+    gun.get('shared/data').on(data => {
+      document.getElementById('output').innerText = JSON.stringify(data);
+    });
+
+    // ALLE Daten aus der Datenbank anzeigen
+    const allDataDiv = document.getElementById('allData');
+    let allMessages = [];
+    
+    gun.get('shared/data').on(data => {
+      if (data) {
+        const timestamp = new Date().toLocaleTimeString();
+        allMessages.push(`[${timestamp}] shared/data: ${JSON.stringify(data, null, 2)}`);
+        allDataDiv.innerHTML = allMessages.join('\n\n');
+      }
+    });
+  </script>
+</body>
+</html>
