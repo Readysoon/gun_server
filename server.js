@@ -22,11 +22,11 @@ function getLocalIP() {
 const myIP = getLocalIP();
 console.log('My IP address:', myIP);
 
-const server = app.listen(8765, '0.0.0.0', () => {
+const server = app.listen(8765, () => {
   console.log(`Server läuft auf http://${myIP}:8765`);
 });
 
 Gun({
   web: server,
-  peers: ['http://192.168.178.114:8765/gun'] // IP von PC A!
+  peers: ['http://192.168.178.115:8765/gun'] // IP von PC A!
 });
