@@ -22,7 +22,7 @@ function getLocalIP() {
 const myIP = getLocalIP();
 console.log('My IP address:', myIP);
 
-const server = app.listen(8765, () => {
+const server = app.listen(8765, '0.0.0.0', () => {
   console.log(`Server läuft auf http://${myIP}:8765`);
 });
 
