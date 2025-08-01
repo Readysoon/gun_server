@@ -4,20 +4,16 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
     "backend": "cd .. && node server.js",
-    "start-backend": "cd .. && node server.js &",
-    "dev-full": "npm run start-backend && npm run dev",
-    "tauri": "tauri",
-    "tauri-dev": "npm run start-backend && tauri dev",
-    "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+    "tauri": "tauri dev", 
+    "dev": "concurrently \"npm run backend\" \"npm run tauri\"",
+    "build": "vite build"
   },
   "license": "MIT",
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "concurrently": "^9.2.0",
     "gun": "^0.2020.1241"
   },
   "devDependencies": {
