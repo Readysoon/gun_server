@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "go": "lsof -ti:8765 | xargs kill -9 2>/dev/null || true && node server.js & sleep 2 && cd tauriGun && npm run tauri",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
