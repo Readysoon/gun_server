@@ -1,6 +1,8 @@
 const Gun = require('gun');
 const express = require('express');
 const os = require('os');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 
 app.use(express.static('public'));
@@ -26,87 +28,67 @@ const server = app.listen(8765, '0.0.0.0', () => {
   console.log(`Server läuft auf http://${myIP}:8765`);
 });
 
+// Load data from radata-!-okh.tmp file
+function loadFromTmpFile() {
+  console.log('🔄 Loading data from radata-!-okh.tmp...');
+  
+  const tmpFilePath = path.join(__dirname, 'radata-!-okh.tmp');
+  
+  if (!fs.existsSync(tmpFilePath)) {
+    console.log('❌ radata-!-okh.tmp file not found');
+    return;
+  }
+  
+  try {
+    const rawData = fs.readFileSync(tmpFilePath, 'utf8');
+    const data = JSON.parse(rawData);
+    
+    console.log('✅ Successfully loaded data from tmp file');
+    console.log('📊 Data structure:', Object.keys(data));
+    
+    return data;
+  } catch (err) {
+    console.log('❌ Error reading tmp file:', err.message);
+    return null;
+  }
+}
 
+// Initialize GUN with loaded data
 const gun = Gun({
   web: server,
-  radisk: true,
-  localStorage: false,
+  chunk: Infinity,
+  max: Infinity,
+  until: Infinity,
   peers: ['http://192.168.178.115:8765/gun'] // IP von PC A!
 });
 
-console.log(`Gun has started`);
-
-
-
-// 🎯 INTELLIGENTE RADATA LÖSUNG - Automatische Key-Extraktion!
-// ===============================================================
-// Diese Lösung:
-// 1. 📁 Liest automatisch alle root keys aus radata/!
-// 2. 🔄 Lädt sie beim Server-Start in die Datenbank
-// 3. 📊 Zeigt Statistiken über geladene Daten
-// 4. 📡 Triggert automatische Peer-Synchronisation
-// 5. 🛡️ Hat Fallback für Fehlerbehandlung
-// 6. ⚡ Arbeitet mit GUN's natürlichem Datenformat
-// ===============================================================
-const intelligentRadataReload = () => {
-  console.log('🔄 Intelligente radata reload...');
+// Load and inject data from tmp file
+const loadedData = loadFromTmpFile();
+if (loadedData) {
+  console.log('🔄 Injecting data into GUN...');
   
-  try {
-    const fs = require('fs');
-    const path = require('path');
+  // Inject each node from the tmp file
+  Object.keys(loadedData).forEach(nodeKey => {
+    const nodeData = loadedData[nodeKey];
+    console.log(`📥 Loading node: ${nodeKey}`);
     
-    const radataFile = path.join(__dirname, 'radata', '!');
-    if (!fs.existsSync(radataFile)) {
-      console.log('❌ Keine radata gefunden');
-      return;
+    // Get the GUN reference for this node
+    const gunNode = gun.get(nodeKey);
+    
+    // Extract the actual data (remove metadata)
+    const cleanData = {};
+    Object.keys(nodeData).forEach(key => {
+      if (key !== '' && nodeData[key] && nodeData[key][':']) {
+        cleanData[key] = nodeData[key][':'];
+      }
+    });
+    
+    // Put the data into GUN
+    if (Object.keys(cleanData).length > 0) {
+      gunNode.put(cleanData);
+      console.log(`✅ Loaded data for ${nodeKey}:`, cleanData);
     }
-    
-    // Lade und parse radata
-    const rawData = fs.readFileSync(radataFile, 'utf8');
-    const radataStructure = JSON.parse(rawData);
-    
-    // Extrahiere automatisch ALLE root keys (außer Metadaten)
-    const rootKeys = Object.keys(radataStructure).filter(key => {
-      return key !== '>' && key !== 'undefined' && !key.includes('\u001b');
-    });
-    
-    console.log(`📋 Gefundene root keys: ${rootKeys.length}`);
-    
-    // Lade automatisch ALLE gefundenen keys
-    let loadedCount = 0;
-    rootKeys.forEach(key => {
-      gun.get(key).once((data) => {
-        if (data) {
-          loadedCount++;
-          console.log(`✅ Geladen: ${key}`);
-        }
-      });
-    });
-    
-    // Warte kurz und zeige Statistik
-    setTimeout(() => {
-      console.log(`🎯 Radata reload: ${loadedCount}/${rootKeys.length} keys erfolgreich geladen`);
-      
-      // Automatische Peer-Synchronisation
-      console.log('📡 Starte Peer-Sync...');
-      rootKeys.forEach(key => {
-        gun.get(key).on(() => {}); // Triggert Sync zu Peers
-      });
-      
-    }, 1000);
-    
-  } catch (err) {
-    console.log('❌ Radata reload fehler:', err.message);
-    
-    // Fallback: Bekannte keys laden
-    console.log('🔄 Fallback: Lade bekannte keys...');
-    ['shared/data', 'nachricht'].forEach(key => {
-      gun.get(key).once(() => {});
-    });
-  }
+  });
   
-  console.log('✅ Intelligente radata reload abgeschlossen!');
-};
-
-// Ausführung wenn GUN bereit ist
-setTimeout(intelligentRadataReload, 2000);
+  console.log('✅ Data injection complete!');
+}
