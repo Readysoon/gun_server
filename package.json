@@ -1,21 +1,30 @@
 {
-  "name": "gun-server",
-  "version": "1.0.0",
+  "name": "taurigun",
+  "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "go": "lsof -ti:8765 | xargs kill -9 2>/dev/null || true && node server.js & sleep 2 && cd tauriGun && npm run tauri",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "backend": "cd gun-server && node server.js",
+    "tauri": "tauri dev", 
+    "dev": "concurrently \"npm run backend\" \"npm run tauri\"",
+    "frontend": "vite dev",
+    "build": "vite build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "license": "MIT",
   "dependencies": {
-    "express": "^5.1.0",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "concurrently": "^9.2.0",
     "gun": "^0.2020.1241"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.7.1"
+    "@sveltejs/adapter-static": "^3.0.6",
+    "@sveltejs/kit": "^2.9.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@tauri-apps/cli": "^2",
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
   }
 }
