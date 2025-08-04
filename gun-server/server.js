@@ -31,5 +31,6 @@ const server = app.listen(8765, '0.0.0.0', () => {
 // Initialize GUN with loaded data
 const gun = Gun({
   web: server,
+  file: 'data.json', 
   peers: ['http://192.168.178.115:8765/gun'] // IP von PC A!
 });

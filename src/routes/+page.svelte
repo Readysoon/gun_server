@@ -14,19 +14,24 @@
     let allMessages: string[] = [];
     
     // Verwende die gleiche Logik wie in index.html - nur .on() verwenden
-    gun.get('shared/data').on((data: any) => {
-      if (data) {
-        const timestamp = new Date().toLocaleTimeString();
-        allMessages.push(`[${timestamp}] shared/data: ${JSON.stringify(data, null, 2)}`);
+    gun.get('shared/data').map().on((data: any) => {
+      if (data && data.message) {
+        const msgStr = `[${new Date(data.timestamp).toLocaleTimeString()}] shared/data: ${data.message}`;
         
-        // Zeige die Nachrichten genau wie in der HTML-App
-        messages = allMessages.map(msgStr => ({
-          message: msgStr,
-          timestamp: new Date().toISOString(),
-          sender: 'Database'
-        }));
+        // Avoid duplicates
+        if (!messages.find(m => m.message === msgStr)) {
+          messages = [
+            ...messages,
+            {
+              message: msgStr,
+              timestamp: new Date().toISOString(),
+              sender: 'Database'
+            }
+          ];
+        }
       }
     });
+
     
     // Debug: Zeige alle verfügbaren Daten
     console.log('GUN connected, listening for data...');
@@ -36,7 +41,7 @@
     if (newMessage.trim()) {
       // Verwende die gleiche Datenstruktur wie in index.html
       const msg = newMessage + ' - ' + new Date().toLocaleTimeString();
-      gun.get('shared/data').put({ message: msg });
+      gun.get('shared/data').set({ message: msg, timestamp: Date.now() });
       newMessage = '';
     }
   }
